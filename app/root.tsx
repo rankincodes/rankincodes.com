@@ -4,17 +4,37 @@ import {
   Meta,
   Outlet,
   Scripts,
+  useLoaderData,
 } from "@remix-run/react";
 
 import stylesheet from "./tailwind.css?url";
+import React from "react";
+import ThemeToggle from "./components/theme-toggle";
+import TopBar from "./components/topbar"
 
 export const links: LinksFunction = () => [
   { rel: "stylesheet", href: stylesheet },
 ];
 
-export default function App() {
+export async function loader() {
+  return {
+    themeScript: `
+     document.documentElement.classList.toggle(
+       'dark',
+        localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)
+      )
+    `
+  }
+}
+
+export function Layout({ 
+  children 
+}: { 
+    children: React.ReactNode 
+}) {
+  const { themeScript } = useLoaderData<typeof loader>()
   return (
-    <html>
+    <html lang="en">
       <head>
         <link
           rel="icon"
@@ -22,15 +42,20 @@ export default function App() {
         />
         <Meta />
         <Links />
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
-      <body>
-        <h1 className="text-3xl font-bold underline">Adam Rankin</h1>
-        <p>Hey, I'm Adam</p>
-        <Outlet />
-
+      <body className="bg-white dark:bg-black dark:text-white">
+        <TopBar />
+        {children}
         <Scripts />
       </body>
     </html>
   )
 }
+
+export default function App() {
+  return <Outlet />  
+}
+
+
 
